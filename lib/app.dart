@@ -7,24 +7,24 @@ class RadioStaniceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF060C1B),
+      fontFamily: 'Montserrat',
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF2DD4BF),
+        secondary: Color(0xFF60A5FA),
+        surface: Color(0xFF0D1830),
+      ),
+      useMaterial3: true,
+    );
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Radio Stanice Srbije',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF005D6C),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF005D6C),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
+      theme: darkTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.dark,
       home: const RadioHomePage(),
     );
   }

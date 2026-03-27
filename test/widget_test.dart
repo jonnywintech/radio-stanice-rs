@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:radio_stanice/main.dart';
+import 'package:radio_stanice/app.dart';
 
 void main() {
   testWidgets('Radio app renders station grid', (WidgetTester tester) async {

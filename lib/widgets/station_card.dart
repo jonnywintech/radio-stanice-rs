@@ -18,94 +18,190 @@ class StationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final Color activeBackground =
-        isDark ? colorScheme.primary : const Color(0xFF007F8B);
-    final Color activeBorder =
-        isDark ? colorScheme.primaryContainer : const Color(0xFF005862);
-    final Color inactiveBackground =
-        isDark ? const Color(0xFF1A2A2F) : const Color(0xFFE7F5F2);
-    final Color inactiveBorder =
-        isDark ? const Color(0xFF35515A) : const Color(0xFFB6D9D1);
-    final Color activeForeground =
-        isDark ? colorScheme.onPrimary : Colors.white;
-    final Color inactiveForeground =
-        isDark ? colorScheme.onSurface : const Color(0xFF13343A);
-    final Color inactiveMuted =
-        isDark ? colorScheme.onSurfaceVariant : const Color(0xFF2F6169);
+    final Color bg = isPlaying
+        ? const Color(0xFF1B2A4A)
+        : const Color(0xFF111B32);
+    final Color border = isPlaying
+        ? const Color(0xFF2DD4BF)
+        : const Color(0xFF24385F);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        padding: const EdgeInsets.all(14),
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        height: 98,
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: isPlaying ? activeBackground : inactiveBackground,
+          borderRadius: BorderRadius.circular(18),
+          color: bg.withValues(alpha: 0.96),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: isDark
-                  ? const Color(0x33000000)
-                  : const Color(0x22000000),
-              blurRadius: 10,
-              offset: Offset(0, 6),
+              color: const Color(0xAA040916),
+              blurRadius: 18,
+              offset: const Offset(0, 9),
             ),
           ],
-          border: Border.all(
-            color: isPlaying ? activeBorder : inactiveBorder,
-            width: 1.4,
-          ),
+          border: Border.all(color: border, width: isPlaying ? 1.5 : 1),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: <Widget>[
-            Icon(
-              isPlaying ? Icons.graphic_eq_rounded : Icons.radio_rounded,
-              size: 34,
-              color: isPlaying
-                  ? activeForeground
-                  : (isDark
-                      ? colorScheme.primary.withValues(alpha: 0.92)
-                      : const Color(0xFF145360)),
-            ),
-            const Spacer(),
-            Text(
-              station.name,
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w700,
-                color: isPlaying ? activeForeground : inactiveForeground,
+            _StationCover(imageUrl: station.coverUrl, isPlaying: isPlaying),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    station.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (isLoading)
+                    Row(
+                      children: <Widget>[
+                        const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF2DD4BF),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Povezivanje...',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.68),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      isPlaying ? 'Now Playing' : 'Tap to Play',
+                      style: TextStyle(
+                        color: isPlaying
+                            ? const Color(0xFF2DD4BF)
+                            : Colors.white.withValues(alpha: 0.66),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            if (isLoading)
-              SizedBox(
-                height: 16,
-                width: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: isPlaying
-                      ? activeForeground
-                      : (isDark
-                          ? colorScheme.primary
-                          : const Color(0xFF0E5F67)),
-                ),
+            const SizedBox(width: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              height: 38,
+              width: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isPlaying
+                    ? const Color(0xFF2DD4BF)
+                    : const Color(0xFF223659),
+              ),
+              child: Icon(
+                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                color: isPlaying ? const Color(0xFF072623) : Colors.white,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StationCover extends StatelessWidget {
+  const _StationCover({required this.imageUrl, required this.isPlaying});
+
+  final String? imageUrl;
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 76,
+      height: 76,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isPlaying
+              ? const Color(0xFF2DD4BF).withValues(alpha: 0.85)
+              : Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            if (imageUrl != null)
+              Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _fallback(),
               )
             else
-              Text(
-                isPlaying ? 'Pauziraj' : 'Pusti stream',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isPlaying
-                      ? activeForeground.withValues(alpha: 0.94)
-                      : inactiveMuted,
+              _fallback(),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: <Color>[
+                    const Color(0x66040B16),
+                    const Color(0xCC040B16),
+                  ],
                 ),
               ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(7),
+                child: Icon(
+                  isPlaying ? Icons.graphic_eq_rounded : Icons.radio_rounded,
+                  color: Colors.white.withValues(alpha: 0.92),
+                  size: 18,
+                ),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fallback() {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[Color(0xFF223659), Color(0xFF141C31)],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.radio_rounded,
+          size: 26,
+          color: Colors.white.withValues(alpha: 0.78),
         ),
       ),
     );
