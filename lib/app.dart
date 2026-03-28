@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'pages/radio_home_page.dart';
+import 'pages/splash_page.dart';
 
 class RadioStaniceApp extends StatelessWidget {
   const RadioStaniceApp({super.key});
@@ -25,7 +26,7 @@ class RadioStaniceApp extends StatelessWidget {
       theme: darkTheme,
       darkTheme: darkTheme,
       themeMode: ThemeMode.dark,
-      home: const RadioHomePage(),
+      home: const SplashPage(nextPage: RadioHomePage()),
     );
   }
 }
