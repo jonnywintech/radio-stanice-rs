@@ -70,14 +70,7 @@ class StationCard extends StatelessWidget {
                       children: <Widget>[
                         const _StationLoadingBars(),
                         const SizedBox(width: 8),
-                        Text(
-                          'Povezivanje...',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.68),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        const SizedBox(width: 10),
                       ],
                     )
                   else

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -17,9 +19,11 @@ class _RadioHomePageState extends State<RadioHomePage> {
   final RadioBrowserService _radioService = RadioBrowserService();
   final Set<String> _loadingStations = <String>{};
   final Map<String, String> _streamCache = <String, String>{};
+  StreamSubscription<PlayerState>? _playerStateSubscription;
 
   int _selectedTab = 0;
   int _playRequestId = 0;
+  bool _isPlayerPlaying = false;
   RadioStation? _currentStation;
 
   final List<RadioStation> _stations = const <RadioStation>[
@@ -55,15 +59,44 @@ class _RadioHomePageState extends State<RadioHomePage> {
   @override
   void initState() {
     super.initState();
-    _player.playerStateStream.listen((PlayerState state) {
+    _playerStateSubscription = _player.playerStateStream.listen((
+      PlayerState state,
+    ) {
       if (!mounted) {
         return;
       }
-      if (state.processingState == ProcessingState.idle &&
-          !state.playing &&
+
+      final bool nextIsPlaying =
+          state.playing && state.processingState != ProcessingState.idle;
+
+      if (state.processingState == ProcessingState.completed &&
           _currentStation != null) {
         setState(() {
+          _isPlayerPlaying = false;
           _currentStation = null;
+          _loadingStations.clear();
+        });
+        return;
+      }
+
+      final bool hasActiveLoading =
+          _currentStation != null &&
+          _loadingStations.contains(_currentStation!.name);
+
+      if (state.processingState == ProcessingState.idle &&
+          !state.playing &&
+          _currentStation != null &&
+          !hasActiveLoading) {
+        setState(() {
+          _isPlayerPlaying = false;
+          _currentStation = null;
+        });
+        return;
+      }
+
+      if (_isPlayerPlaying != nextIsPlaying) {
+        setState(() {
+          _isPlayerPlaying = nextIsPlaying;
         });
       }
     });
@@ -71,31 +104,38 @@ class _RadioHomePageState extends State<RadioHomePage> {
 
   @override
   void dispose() {
+    _playerStateSubscription?.cancel();
     _player.dispose();
     super.dispose();
   }
 
   Future<void> _onStationTap(RadioStation station) async {
-    if (_loadingStations.contains(station.name)) {
-      return;
-    }
-
-    if (_currentStation == station && _player.playing) {
-      _playRequestId++;
+    // Tapping the active station should always stop, even while buffering.
+    if (_currentStation == station) {
+      final int stopRequestId = ++_playRequestId;
       await _player.stop();
       if (!mounted) {
         return;
       }
+      if (stopRequestId != _playRequestId) {
+        return;
+      }
       setState(() {
+        _isPlayerPlaying = false;
         _currentStation = null;
         _loadingStations.remove(station.name);
       });
       return;
     }
 
+    if (_loadingStations.contains(station.name)) {
+      return;
+    }
+
     final int requestId = ++_playRequestId;
 
     setState(() {
+      _isPlayerPlaying = false;
       _currentStation = station;
       _loadingStations
         ..clear()
@@ -169,6 +209,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
         return;
       }
       setState(() {
+        _isPlayerPlaying = _player.playing;
         _currentStation = station;
       });
     } on PlayerException catch (error) {
@@ -184,6 +225,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
         ),
       );
       setState(() {
+        _isPlayerPlaying = false;
         if (_currentStation == station) {
           _currentStation = null;
         }
@@ -199,6 +241,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
         ),
       );
       setState(() {
+        _isPlayerPlaying = false;
         if (_currentStation == station) {
           _currentStation = null;
         }
@@ -244,7 +287,9 @@ class _RadioHomePageState extends State<RadioHomePage> {
                                 const SizedBox(width: 10),
                             itemBuilder: (BuildContext context, int index) {
                               final RadioStation station = _stations[index];
-                              final bool playing = _currentStation == station;
+                              final bool playing =
+                                  _currentStation == station &&
+                                  _isPlayerPlaying;
 
                               return _MiniStationTile(
                                 station: station,
@@ -309,7 +354,9 @@ class _RadioHomePageState extends State<RadioHomePage> {
 
                             return StationCard(
                               station: station,
-                              isPlaying: _currentStation == station,
+                              isPlaying:
+                                  _currentStation == station &&
+                                  _isPlayerPlaying,
                               isLoading: _loadingStations.contains(
                                 station.name,
                               ),
