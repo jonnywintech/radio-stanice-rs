@@ -375,14 +375,14 @@ class _RadioHomePageState extends State<RadioHomePage> {
                     ),
                   ),
                 ),
-                _BottomNavBar(
-                  selectedTab: _selectedTab,
-                  onSelect: (int index) {
-                    setState(() {
-                      _selectedTab = index;
-                    });
-                  },
-                ),
+                // _BottomNavBar(
+                //   selectedTab: _selectedTab,
+                //   onSelect: (int index) {
+                //     setState(() {
+                //       _selectedTab = index;
+                //     });
+                //   },
+                // ),
               ],
             ),
           ),
@@ -785,79 +785,79 @@ class _NowPlayingPanel extends StatelessWidget {
   }
 }
 
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar({required this.selectedTab, required this.onSelect});
+// class _BottomNavBar extends StatelessWidget {
+//   const _BottomNavBar({required this.selectedTab, required this.onSelect});
 
-  final int selectedTab;
-  final ValueChanged<int> onSelect;
+//   final int selectedTab;
+//   final ValueChanged<int> onSelect;
 
-  @override
-  Widget build(BuildContext context) {
-    const List<IconData> icons = <IconData>[
-      Icons.home_rounded,
-      Icons.radio_rounded,
-      Icons.favorite_rounded,
-      Icons.person_rounded,
-    ];
-    const List<String> labels = <String>[
-      'Home',
-      'Stations',
-      'Favorites',
-      'Profile',
-    ];
+//   @override
+//   Widget build(BuildContext context) {
+//     const List<IconData> icons = <IconData>[
+//       Icons.home_rounded,
+//       Icons.radio_rounded,
+//       Icons.favorite_rounded,
+//       Icons.person_rounded,
+//     ];
+//     const List<String> labels = <String>[
+//       'Home',
+//       'Stations',
+//       'Favorites',
+//       'Profile',
+//     ];
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-      child: Container(
-        height: 66,
-        decoration: BoxDecoration(
-          color: const Color(0xFF0D1830).withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFF21385D), width: 1),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(
-              color: Color(0xAA020611),
-              blurRadius: 26,
-              offset: Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Row(
-          children: List<Widget>.generate(icons.length, (int index) {
-            final bool selected = selectedTab == index;
+//     return Padding(
+//       padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+//       child: Container(
+//         height: 66,
+//         decoration: BoxDecoration(
+//           color: const Color(0xFF0D1830).withValues(alpha: 0.95),
+//           borderRadius: BorderRadius.circular(22),
+//           border: Border.all(color: const Color(0xFF21385D), width: 1),
+//           boxShadow: const <BoxShadow>[
+//             BoxShadow(
+//               color: Color(0xAA020611),
+//               blurRadius: 26,
+//               offset: Offset(0, 12),
+//             ),
+//           ],
+//         ),
+//         child: Row(
+//           children: List<Widget>.generate(icons.length, (int index) {
+//             final bool selected = selectedTab == index;
 
-            return Expanded(
-              child: InkWell(
-                onTap: () => onSelect(index),
-                borderRadius: BorderRadius.circular(18),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      icons[index],
-                      color: selected
-                          ? const Color(0xFF2DD4BF)
-                          : Colors.white.withValues(alpha: 0.54),
-                      size: 23,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      labels[index],
-                      style: TextStyle(
-                        color: selected
-                            ? const Color(0xFF2DD4BF)
-                            : Colors.white.withValues(alpha: 0.54),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-}
+//             return Expanded(
+//               child: InkWell(
+//                 onTap: () => onSelect(index),
+//                 borderRadius: BorderRadius.circular(18),
+//                 child: Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: <Widget>[
+//                     Icon(
+//                       icons[index],
+//                       color: selected
+//                           ? const Color(0xFF2DD4BF)
+//                           : Colors.white.withValues(alpha: 0.54),
+//                       size: 23,
+//                     ),
+//                     const SizedBox(height: 2),
+//                     Text(
+//                       labels[index],
+//                       style: TextStyle(
+//                         color: selected
+//                             ? const Color(0xFF2DD4BF)
+//                             : Colors.white.withValues(alpha: 0.54),
+//                         fontSize: 11,
+//                         fontWeight: FontWeight.w600,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             );
+//           }),
+//         ),
+//       ),
+//     );
+//   }
+// }
