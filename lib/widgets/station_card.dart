@@ -68,14 +68,7 @@ class StationCard extends StatelessWidget {
                   if (isLoading)
                     Row(
                       children: <Widget>[
-                        const SizedBox(
-                          height: 14,
-                          width: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF2DD4BF),
-                          ),
-                        ),
+                        const _StationLoadingBars(),
                         const SizedBox(width: 8),
                         Text(
                           'Povezivanje...',
@@ -121,6 +114,72 @@ class StationCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StationLoadingBars extends StatefulWidget {
+  const _StationLoadingBars();
+
+  @override
+  State<_StationLoadingBars> createState() => _StationLoadingBarsState();
+}
+
+class _StationLoadingBarsState extends State<_StationLoadingBars>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 14,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget? child) {
+          final double progress = _controller.value;
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List<Widget>.generate(3, (int index) {
+              final double phase = (progress + (index * 0.2)) % 1;
+              final double wave = (phase < 0.5 ? phase : 1 - phase) * 2;
+              final double height = 4 + (wave * 10);
+
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 70),
+                curve: Curves.easeOut,
+                width: 4,
+                height: height,
+                decoration: BoxDecoration(
+                  color: Color.lerp(
+                    const Color(0xFF147A73),
+                    const Color(0xFF2DD4BF),
+                    wave,
+                  ),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              );
+            }),
+          );
+        },
       ),
     );
   }

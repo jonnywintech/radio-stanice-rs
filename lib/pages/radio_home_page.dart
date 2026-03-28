@@ -23,6 +23,10 @@ class _RadioHomePageState extends State<RadioHomePage> {
   RadioStation? _currentStation;
 
   final List<RadioStation> _stations = const <RadioStation>[
+    RadioStation('Red', <String>[
+      'radio red',
+      'red radio',
+    ], coverUrl: 'https://picsum.photos/seed/redradio/600/600'),
     RadioStation('Radio S1', <String>[
       'radio s1',
       's1 radio',
@@ -46,10 +50,6 @@ class _RadioHomePageState extends State<RadioHomePage> {
       'radio karolina',
       'karolina',
     ], coverUrl: 'https://picsum.photos/seed/karolina/600/600'),
-    RadioStation('Red', <String>[
-      'radio red',
-      'red radio',
-    ], coverUrl: 'https://picsum.photos/seed/redradio/600/600'),
   ];
 
   @override
