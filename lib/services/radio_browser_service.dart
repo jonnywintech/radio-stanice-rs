@@ -1,19 +1,50 @@
 import 'dart:convert';
+import 'dart:collection';
 
 import 'package:http/http.dart' as http;
 
 import '../models/radio_station.dart';
 
 class RadioBrowserService {
-  static const String _apiHost = 'de1.api.radio-browser.info';
+  static const List<String> _apiHosts = <String>[
+    'de1.api.radio-browser.info',
+    'nl1.api.radio-browser.info',
+    'fr1.api.radio-browser.info',
+  ];
+  static const Duration _requestTimeout = Duration(seconds: 6);
+  static const Duration _resolveTimeout = Duration(seconds: 12);
 
   Future<String?> resolveStreamUrl({
     required RadioStation station,
     required Map<String, String> streamCache,
   }) async {
+    final List<String> urls = await resolveStreamUrls(
+      station: station,
+      streamCache: streamCache,
+    );
+    if (urls.isEmpty) {
+      return null;
+    }
+    return urls.first;
+  }
+
+  Future<List<String>> resolveStreamUrls({
+    required RadioStation station,
+    required Map<String, String> streamCache,
+  }) async {
+    return _resolveStreamUrlsInternal(
+      station: station,
+      streamCache: streamCache,
+    ).timeout(_resolveTimeout, onTimeout: () => <String>[]);
+  }
+
+  Future<List<String>> _resolveStreamUrlsInternal({
+    required RadioStation station,
+    required Map<String, String> streamCache,
+  }) async {
     final String? cached = streamCache[station.name];
     if (cached != null && cached.isNotEmpty) {
-      return cached;
+      return <String>[cached];
     }
 
     final List<Map<String, dynamic>> candidates = <Map<String, dynamic>>[];
@@ -41,11 +72,11 @@ class RadioBrowserService {
       }
     }
 
-    final String? bestUrl = _pickBestUrl(station, candidates);
-    if (bestUrl != null) {
-      streamCache[station.name] = bestUrl;
+    final List<String> rankedUrls = _rankUrls(station, candidates);
+    if (rankedUrls.isNotEmpty) {
+      streamCache[station.name] = rankedUrls.first;
     }
-    return bestUrl;
+    return rankedUrls;
   }
 
   Future<List<Map<String, dynamic>>> _searchStations({
@@ -61,36 +92,43 @@ class RadioBrowserService {
       params['countrycode'] = countryCode;
     }
 
-    final Uri uri = Uri.https(_apiHost, '/json/stations/search', params);
-    final http.Response response = await http.get(uri);
-    if (response.statusCode != 200) {
-      return <Map<String, dynamic>>[];
+    for (final String host in _apiHosts) {
+      try {
+        final Uri uri = Uri.https(host, '/json/stations/search', params);
+        final http.Response response = await http
+            .get(uri)
+            .timeout(_requestTimeout);
+        if (response.statusCode != 200) {
+          continue;
+        }
+
+        final Object decoded = jsonDecode(response.body);
+        if (decoded is! List) {
+          continue;
+        }
+
+        return decoded
+            .whereType<Map>()
+            .map(
+              (Map item) => item.map(
+                (dynamic key, dynamic value) => MapEntry(key.toString(), value),
+              ),
+            )
+            .toList();
+      } catch (_) {
+        // Try the next mirror if this host is unavailable.
+      }
     }
 
-    final Object decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return decoded
-        .whereType<Map>()
-        .map(
-          (Map item) => item.map(
-            (dynamic key, dynamic value) => MapEntry(
-              key.toString(),
-              value,
-            ),
-          ),
-        )
-        .toList();
+    return <Map<String, dynamic>>[];
   }
 
-  String? _pickBestUrl(
+  List<String> _rankUrls(
     RadioStation station,
     List<Map<String, dynamic>> candidates,
   ) {
     if (candidates.isEmpty) {
-      return null;
+      return <String>[];
     }
 
     final Set<String> tokens = station.name
@@ -100,13 +138,20 @@ class RadioBrowserService {
         .where((String t) => t.length > 1)
         .toSet();
 
-    Map<String, dynamic>? winner;
-    int bestScore = -1;
+    final List<_ScoredStream> scored = <_ScoredStream>[];
 
     for (final Map<String, dynamic> item in candidates) {
-      final String stream =
-          (item['url_resolved'] ?? item['url'] ?? '').toString().trim();
+      final String resolved = (item['url_resolved'] ?? '').toString().trim();
+      final String fallback = (item['url'] ?? '').toString().trim();
+      final String stream = resolved.isNotEmpty ? resolved : fallback;
       if (stream.isEmpty) {
+        continue;
+      }
+
+      final Uri? uri = Uri.tryParse(stream);
+      if (uri == null ||
+          !(uri.scheme == 'http' || uri.scheme == 'https') ||
+          uri.host.isEmpty) {
         continue;
       }
 
@@ -125,22 +170,38 @@ class RadioBrowserService {
         }
       }
 
-      final String countryCode =
-          (item['countrycode'] ?? '').toString().toLowerCase();
+      final String countryCode = (item['countrycode'] ?? '')
+          .toString()
+          .toLowerCase();
       if (countryCode == 'rs') {
         score += 1;
       }
 
-      if (score > bestScore) {
-        bestScore = score;
-        winner = item;
+      if (resolved.isNotEmpty) {
+        score += 2;
       }
+
+      scored.add(_ScoredStream(url: stream, score: score));
     }
 
-    if (winner == null) {
-      return null;
+    if (scored.isEmpty) {
+      return <String>[];
     }
 
-    return (winner['url_resolved'] ?? winner['url'] ?? '').toString();
+    scored.sort((_ScoredStream a, _ScoredStream b) => b.score - a.score);
+
+    final LinkedHashSet<String> uniqueUrls = LinkedHashSet<String>();
+    for (final _ScoredStream item in scored) {
+      uniqueUrls.add(item.url);
+    }
+
+    return uniqueUrls.toList(growable: false);
   }
+}
+
+class _ScoredStream {
+  const _ScoredStream({required this.url, required this.score});
+
+  final String url;
+  final int score;
 }

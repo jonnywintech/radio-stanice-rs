@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 
 import '../models/radio_station.dart';
 import '../services/radio_browser_service.dart';
@@ -104,7 +103,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
     });
 
     try {
-      final String? streamUrl = await _radioService.resolveStreamUrl(
+      final List<String> streamUrls = await _radioService.resolveStreamUrls(
         station: station,
         streamCache: _streamCache,
       );
@@ -113,7 +112,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
         return;
       }
 
-      if (streamUrl == null) {
+      if (streamUrls.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Nisam pronasao stream za ${station.name}.')),
         );
@@ -129,28 +128,42 @@ class _RadioHomePageState extends State<RadioHomePage> {
         await _player.stop();
       }
 
-      final Uri streamUri = Uri.parse(streamUrl);
-      await _player.setAudioSource(
-        AudioSource.uri(
-          streamUri,
-          tag: MediaItem(
-            id: streamUrl,
-            title: station.name,
-            artist: 'Radio Stanice SR',
-            album: 'Live Radio',
-            artUri: Uri.tryParse(
-              station.coverUrl ??
-                  'https://picsum.photos/seed/radio-default/600/600',
-            ),
-          ),
-        ),
-      );
+      String? selectedStream;
+      PlayerException? lastPlayerError;
 
-      if (!mounted || requestId != _playRequestId) {
-        return;
+      for (final String streamUrl in streamUrls.take(8)) {
+        try {
+          final Uri streamUri = Uri.parse(streamUrl);
+          await _player.setAudioSource(
+            AudioSource.uri(
+              streamUri,
+              headers: const <String, String>{
+                'User-Agent':
+                    'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Mobile Safari/537.36',
+              },
+            ),
+          );
+          await _player.play();
+          selectedStream = streamUrl;
+          break;
+        } on PlayerException catch (error) {
+          lastPlayerError = error;
+          debugPrint(
+            'Stream candidate failed for ${station.name}: url=$streamUrl, code=${error.code}, message=${error.message}',
+          );
+        }
       }
 
-      await _player.play();
+      if (selectedStream == null) {
+        if (lastPlayerError != null) {
+          debugPrint(
+            'Playback failed for ${station.name}: code=${lastPlayerError.code}, message=${lastPlayerError.message}',
+          );
+        }
+        throw Exception('No playable stream candidate found.');
+      }
+
+      _streamCache[station.name] = selectedStream;
 
       if (!mounted || requestId != _playRequestId) {
         return;
@@ -158,7 +171,25 @@ class _RadioHomePageState extends State<RadioHomePage> {
       setState(() {
         _currentStation = station;
       });
-    } catch (_) {
+    } on PlayerException catch (error) {
+      debugPrint(
+        'Playback failed for ${station.name}: code=${error.code}, message=${error.message}',
+      );
+      if (!mounted || requestId != _playRequestId) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ne mogu da pokrenem stream za ${station.name}.'),
+        ),
+      );
+      setState(() {
+        if (_currentStation == station) {
+          _currentStation = null;
+        }
+      });
+    } catch (error) {
+      debugPrint('Playback failed for ${station.name}: $error');
       if (!mounted || requestId != _playRequestId) {
         return;
       }
