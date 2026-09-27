@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  WakelockPlus.enable();
   runApp(const RadioStaniceApp());
 }
 
@@ -198,10 +201,7 @@ class _RadioHomePageState extends State<RadioHomePage> {
         .whereType<Map>()
         .map(
           (Map item) => item.map(
-            (dynamic key, dynamic value) => MapEntry(
-              key.toString(),
-              value,
-            ),
+            (dynamic key, dynamic value) => MapEntry(key.toString(), value),
           ),
         )
         .toList();
@@ -226,8 +226,9 @@ class _RadioHomePageState extends State<RadioHomePage> {
     int bestScore = -1;
 
     for (final Map<String, dynamic> item in candidates) {
-      final String stream =
-          (item['url_resolved'] ?? item['url'] ?? '').toString().trim();
+      final String stream = (item['url_resolved'] ?? item['url'] ?? '')
+          .toString()
+          .trim();
       if (stream.isEmpty) {
         continue;
       }
@@ -247,8 +248,9 @@ class _RadioHomePageState extends State<RadioHomePage> {
         }
       }
 
-      final String countryCode =
-          (item['countrycode'] ?? '').toString().toLowerCase();
+      final String countryCode = (item['countrycode'] ?? '')
+          .toString()
+          .toLowerCase();
       if (countryCode == 'rs') {
         score += 1;
       }
@@ -307,16 +309,17 @@ class _RadioHomePageState extends State<RadioHomePage> {
                     itemCount: _stations.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1,
-                    ),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1,
+                        ),
                     itemBuilder: (BuildContext context, int index) {
                       final RadioStation station = _stations[index];
                       final bool isPlaying = _currentStation == station;
-                      final bool isLoading =
-                          _loadingStations.contains(station.name);
+                      final bool isLoading = _loadingStations.contains(
+                        station.name,
+                      );
 
                       return InkWell(
                         borderRadius: BorderRadius.circular(24),
