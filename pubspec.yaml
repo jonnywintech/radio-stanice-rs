@@ -36,11 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.3.0
   just_audio: ^0.10.5
-<<<<<<< HEAD
   wakelock_plus: ^1.8.0
-=======
-  wakelock_plus: ^1.2.8
->>>>>>> 0fa911a7b1dc272d5776e1333e824526a929da4c
 
 dev_dependencies:
   flutter_test:

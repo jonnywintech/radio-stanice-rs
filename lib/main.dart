@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
+import 'dart:convert';
 
-import 'app.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:just_audio/just_audio.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'app.dart' as app;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WakelockPlus.enable();
-  runApp(const RadioStaniceApp());
+  runApp(const app.RadioStaniceApp());
 }
 
 class RadioStaniceApp extends StatelessWidget {

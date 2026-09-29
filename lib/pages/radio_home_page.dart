@@ -21,7 +21,6 @@ class _RadioHomePageState extends State<RadioHomePage> {
   final Map<String, String> _streamCache = <String, String>{};
   StreamSubscription<PlayerState>? _playerStateSubscription;
 
-  int _selectedTab = 0;
   int _playRequestId = 0;
   bool _isPlayerPlaying = false;
   RadioStation? _currentStation;
