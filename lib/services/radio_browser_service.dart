@@ -181,6 +181,18 @@ class RadioBrowserService {
         score += 2;
       }
 
+      // Prefer higher bitrates (kbps); 0 means unknown, so no bonus.
+      final int bitrate = int.tryParse((item['bitrate'] ?? '').toString()) ?? 0;
+      if (bitrate >= 192) {
+        score += 4;
+      } else if (bitrate >= 128) {
+        score += 3;
+      } else if (bitrate >= 96) {
+        score += 1;
+      } else if (bitrate > 0) {
+        score -= 1;
+      }
+
       scored.add(_ScoredStream(url: stream, score: score));
     }
 
